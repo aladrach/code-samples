@@ -1,0 +1,54 @@
+{# if craft.config.addExpiryHeaders %}
+    {% if expiryTime is not defined %}{% set expiryTime = '+1 day' %}{% endif %}
+
+    {% set expires = now | date_modify(expiryTime) %}
+    {% header "Cache-Control: max-age=" ~ (expires.timestamp - now.timestamp) %}
+    {% header "Pragma: cache" %}
+    {% header "Expires: " ~ expires.rfc1123() %}
+    {% header "X-Remove-Cache-Control: 1" %}
+{% endif #}
+
+{#
+ # Layout template
+ # ---------------
+ #
+ # This template defines your site’s global layout. It can be
+ # “extended” by other templates to fill in the gaps.
+ #
+ # See Twig’s Template Inheritance documentation for more details:
+ # http://twig.sensiolabs.org/doc/templates.html#template-inheritance
+ #}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<head>
+	<meta charset="utf-8" />
+	{% hook 'seomaticRender' %}
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="home" href="{{ siteUrl }}" />
+	{% block styles %}{% endblock %}
+	
+	<link rel="shortcut icon" href="/favicon.png" />
+	{% set cart = craft.commerce.cart %}
+</head>
+<body{% if entry.slug is defined %} class="{{entry.slug}}"{% endif %}>
+	<!-- Google Tag Manager -->
+	<div class="page-wrapper">
+		{% include '_includes/header.html' %}
+		{% if craft.request.path != '' %}<section class="page-content">{% endif %}
+		{% block cartHeader %}{% endblock %}
+		<main class="animsition" id="content" role="main">
+			{% block content %}
+				<p>If you see me, you haven’t set your <code>{% verbatim %}{% block content %}…{% endblock %}{% endverbatim %}</code> yet.</p>
+				<p>See Twig’s <a href="http://twig.sensiolabs.org/doc/templates.html#template-inheritance">Template Inheritance</a> documentation for an explanation.</p>
+			{% endblock %}
+		</main>
+		{% if craft.request.path != '' %}</section>{% endif %}
+		{% include '_includes/footer.html' %}
+	</div>
+	<link rel="stylesheet" href="/assets/stylesheets/app.min.css?20161213ba">
+
+    <script src="/assets/scripts/app.min.js?20161213ba"></script>
+	{% block footerScripts %}{% endblock %}
+	
+</body>
+</html>

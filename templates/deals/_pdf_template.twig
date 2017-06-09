@@ -1,0 +1,111 @@
+{% set order = craft.commerce.orders.number(number).first() %}
+
+{% if requestedCount|length == 0 %}
+    {% set requestedCount = 1 %}
+{% endif %}
+
+{% if not order and not requestedItem|length %}
+    {% redirect 'deals/customer' %}
+{% endif %}
+
+<style>
+    .certificate {
+        border: 1px solid #000;
+        padding: 30px;
+        font-family: Arial, "Helvetica Neue", Helvetica, Tahoma, sans-serif;
+    }
+
+    .certificate-logo {
+        display:inline-block;
+        width: 50%;
+        vertical-align: top;
+    }
+
+    .certificate-info {
+        display:inline-block;
+        text-align: right;
+        width: 50%;
+    }
+
+    .certificate-info-title {
+        margin-top: 0;
+    }
+
+    .certificate-value {
+        margin-top: 40px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #000;
+        text-align: right;
+    }
+
+    .certificate-restrictions {
+        display:inline-block;
+        width: 50%;
+    }
+
+    .certificate-details {
+        display:inline-block;
+        text-align: center;
+        width: 50%;
+    }
+
+    .certificate-orderNo {
+
+    }
+
+    .certificate-smallPrint {
+        margin-top: 20px;
+        font-size: 11px;
+    }
+</style>
+
+{% spaceless %}
+
+{% for item in order.lineItems %}
+    {% if item.id == requestedItem %}
+
+        {# want to use snapshot here, but custom fields not saved in snaphot? #}
+        {% set product = item.purchasable.product %}
+
+        <div class="certificate">
+            <div class="certificate-logo"><img src="{{ siteUrl }}assets/mimideals_logo.png"></div>
+
+            <div class="certificate-info">
+                <h3 class="certificate-info-title">Voucher: {{ item.sku }}-{{item.id}}-{{ requestedCount }}</h3>
+                <p>{{ product.certificateBusiness.first().title }} (${{ product.certificateFaceValue }})</p>
+                <p>Purchased by:
+                    {% if order.shippingAddress.firstName is not empty %}
+                        {{ order.shippingAddress.firstName }}
+                    {% endif %}
+
+                    {% if order.shippingAddress.lastName is not empty %}
+                        {{ order.shippingAddress.lastName }}
+                    {% endif %}</p>
+            </div>
+
+            <div class="certificate-value">
+                MimiDeal Voucher************************************************************${{ product.certificateFaceValue|number_format(2, '.', ',') }}
+            </div>
+
+            <div class="certificate-restrictions">
+                {{ product.certificateRestrictions }}
+            </div>
+
+            <div class="certificate-details">
+                <p>Valid only at:</p>
+                <p><strong>{{ product.certificateBusiness.first().title }}</strong></p>
+                <p>{{ product.certificateAddress }}</p>
+                <p>{{ product.certificatePhoneNumber }}</p>
+            </div>
+
+            <div class="certificate-orderNo">
+                Order Number: {{ item.id }}
+            </div>
+            <div class="certificate-smallPrint">
+                {{ craft.giftCertificates.getLegalDisclaimer }}
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}
+
+{% endspaceless %}

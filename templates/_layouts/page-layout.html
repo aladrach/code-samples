@@ -1,0 +1,143 @@
+{% extends '_layouts/default' %}
+
+{% block content %}
+<section class="{{entry.pageClass}}">
+	{% if entry.hideTitle == 0 %}
+		<div class="row">
+			<div class="medium-12 columns ">
+				<h1>{{entry.title}}</h1>
+			</div>
+		</div>
+	{% endif %}
+	{% for row in entry.pageLayout %}
+		{% set rowClasses -%}{% if row.class %} {{row.class}}{% endif %}{% if row.fullWidthContent %} expanded{% endif %}{% if row.horizontalPadding == 0 %} collapse{% endif %}{% endset -%}
+
+		{% set rowStyle -%}
+			style="{% if row.backgroundImage.first.url is defined %} background-image:url('{{row.backgroundImage.first.url}}');{% endif %}{% if row.backgroundColor %} background-color:{{row.backgroundColor.getHex()}};{% endif %}"
+		{% endset -%}
+		{% if row.fullWidth %}
+			<section {{rowStyle}}class="{% if row.verticalPadding %}vert-padding{% endif %}{% if row.backgroundTile %} bg-tile{% endif %}">
+				<div class="row full-bg {{rowClasses}}">
+		{% else %}
+			<div class="row {% if row.verticalPadding %} vert-padding{% endif %} {{rowClasses}}" {{rowStyle}}>
+		{% endif %}
+			{% for column in row.columns %}
+				<div class="{{column.columnWidth}} columns">
+					{% for block in column.columnContent %}
+						<div class="{{block.type}}{% if block.blockClass %} {{block.blockClass}}{% endif %}{% if block.type == 'module' %} {{block.module}}{% endif %}" id="{% if block.blockClass %}{{block.blockClass}}{% endif %}">
+							{% switch block.type  %}
+								{% case "wysiwyg" %}
+								<div {% if block.allCapsHeading %}class="allCapsHeading"{% endif %}>
+									{{block.wysiwygContent}}
+								</div>
+									
+								{% case "gallery" %}
+									{% for image in block.images %}
+										<li class="gallery-li">
+											<a href="{{image.url}}" data-lightbox="gallery"><img src="{{image.url}}"></a>
+										</li>
+									{% endfor %}
+
+								{% case "slider" %}
+									{% set slider = craft.entries.section('sliders').id(block.slider.first.id).first %}
+									<div class="slider {{slider.title|kebab}}-{{slider.id}}">
+										{% for slide in slider.slides %}
+											<div class="slick-slide">
+												<div class="slide-container">
+													<img src="{{slide.slideImage.first.url}}" alt="">
+													<div class="overlay">
+														<div class="overlay-container">
+															<h4>{{slide.slideHeading}}</h4>
+															{{slide.slideText|raw}}
+															{% if slide.showButton %}
+																<a href="{{slide.buttonLink}}" class="button">{{slide.buttonText}}</a>
+															{% endif %}
+														</div>
+													</div>
+												</div>
+											</div>
+										{% endfor %}
+									 </div>
+								{% includeJs %}
+									$('.{{slider.title|kebab}}-{{slider.id}}').slick({
+									  dots: false,
+									  speed: 800,
+									  autoplay: true,
+									  arrows: false,
+									  autoplaySpeed: 3000,
+									  fade: true
+									});
+								{% endincludejs %}
+
+								{% case "sectionHeading" %}
+									<h2 class="dashed" {% if block.allCapsHeading %}style="text-transform: uppercase;"{% endif %}
+									><span>{{block.heading}}</span></h2>
+									<p class="subheading">{{block.subHeading}}</p>
+
+								{% case "image" %}
+									<img src="{{block.image.first.url}}" alt="">
+
+								{% case "module" %}
+									{% set modulePath %}_modules/{{block.module}}{% endset %}
+									{% include ''~modulePath~'' %}
+								{% case "testimonial" %}
+									{% include '_modules/testimonials' %}
+									{% case "locationFaq" %}
+									{% include '_modules/locationFaq' %}
+								{% case "video" %}
+									<div class="flex-video widescreen">
+										{{block.videoUrl|videoEmbed}}
+									</div>
+								{% case "storeLocation" %}
+									{% if block.interior %}
+										{% include '_modules/store-location-interior' %}
+										{% else %}
+										{% include '_modules/store-location' %}
+									{% endif %}
+								{% case "events" %}
+									{% include '_modules/events' %}
+								{% case "newsletterSignUp" %}
+									{% include '_modules/newsletter-sign-up' %}
+								{% case "heroImage" %}
+									<div class="hero-container" style="background-image: url('{{block.image.first.url('heroImage')}}')">
+									</div>
+								{% case "form" %}
+									{{ craft.amForms.displayForm(block.form.first.handle) }}
+
+								{% case "googleMap" %}
+									<iframe width="100%" height="400" frameborder="0" style="border: 0px; overflow: hidden;" src="https://www.google.com/maps/embed/v1/place?key=AIzaSyCy1VKXRxDYSXui5rns5vKrKWa8r3Uq-4Y&amp;q={{block.mapInfo.address}}" id="iFrameResizer0" scrolling="no">
+            						</iframe>
+            					{% case "imageWithText" %}
+
+            					{% if block.imageLink | length %}
+            						<a href="{{block.imageLink}}"><img src="{{block.image.first.url}}" alt=""></a>
+            						<a href="{{block.imageLink}}">								
+            						<div class="text-content">
+	            						<h4 {% if block.allCapsHeading %}style="text-transform: uppercase;"{% endif %}>{{block.imageHeader}}</h4>
+	            						{{block.imageDescription|raw}}
+            						</div></a>
+            						{% else %}
+
+            						<img src="{{block.image.first.url}}" alt="">
+            						<div class="text-content">
+	            						<h4 {% if block.allCapsHeading %}style="text-transform: uppercase;"{% endif %}>{{block.imageHeader}}</h4>
+	            						{{block.imageDescription|raw}}
+            						</div>
+        						{% endif %}
+							{% endswitch %}
+						</div>
+					{% endfor %}
+				</div>
+			{% endfor %}
+		{% if row.fullWidth %}
+			</div>
+			</section>
+		{% else %}
+			</div>
+		{% endif %}
+	{% endfor %}
+		</div>
+	</div>
+</section>
+
+{% endblock %}

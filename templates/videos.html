@@ -1,0 +1,45 @@
+{% extends "_layouts/default" %}
+{% block content %}
+<section class="top-videos">
+		<div class="row">
+			<div class="medium-12 columns">
+				<h2 class="headline">Top Videos</h2>
+				{% set videos = craft.rest.request.handle('youtube').send() %}
+				<div class="row small-up-3">
+				{% for item in videos.data.items %}
+					<div class="column slide">
+						<a href="#" data-open="topVideo-{{loop.index}}" onclick="event.preventDefault();">
+							<div class="video-overlay-container">
+								{% set image = 'http://img.youtube.com/vi/' ~ item.snippet.resourceId.videoId ~ '/maxresdefault.jpg' %}
+								{% set transformedImage = craft.imager.transformImage(image, { width: 400, height: 400 }) %}
+								<img src="{{transformedImage.url}}" alt="{{item.snippet.title}}"><br>
+								<div class="video-overlay">
+									<div class="video-overlay-text self-align-middle">
+										{{item.snippet.title}}
+										<div class="published-date">
+											{% set postDate = item.snippet.publishedAt|date_modify('+0 day') %}
+											{{postDate|timeAgoInWords}} ago
+										</div>
+									</div>
+									<div class="play-button">
+										<i class="fa fa-play-circle"></i>
+									</div>
+								</div>
+							</div>
+						</a>
+						<div class="large reveal video-modal" id="topVideo-{{loop.index}}" data-reveal data-close-on-click="true" data-animation-in="fade-in fast" data-animation-out="fade-out fast" data-reset-on-close="true">
+							<div class="flex-video widescreen">
+								{% set videoUrl = 'https://www.youtube.com/watch?v=' ~ item.snippet.resourceId.videoId %}
+								{{videoUrl|videoEmbed}}
+								<button class="close-button" data-close aria-label="Close modal" type="button">
+								  <span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+						</div>
+					</div>
+				{% endfor %}
+				</div>
+			</div>
+		</div>
+	</section>
+	{% endblock %}

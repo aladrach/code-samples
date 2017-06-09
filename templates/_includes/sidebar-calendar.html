@@ -1,0 +1,84 @@
+{% if craft.request.getparam('month') %}
+    {% set currentMonth = craft.request.getparam('month')|date('n') %}
+    {% set currentYear = craft.request.getparam('month')|date('Y') %}
+{% else %}
+    {% set currentMonth = "now"|date('n') %}
+    {% set currentYear = "now"|date('Y') %}
+{% endif %}
+
+
+{# Set the current Year - Month #}
+{% set current = currentYear  ~ "-" ~ currentMonth ~ "-1" %}
+
+{# Set previous and next months #}
+{% set prevMonth = current|date_modify("last day of last month")|date('c') %}
+{% set nextMonth = current|date_modify("first day of next month")|date('c') %}
+
+{% set params = {
+    "events": [],
+    "month": currentMonth,
+    "year": currentYear,
+    "startDOW": 0
+    }
+%}
+
+{% calendar params as days %}
+<div class="sidebar-calendar">
+    <h5><a href="/events?month={{prevMonth|date_modify('first day of this month')|date('Y-m-d')}}"><<</a> {{current|date('M Y')}} <a href="/events?month={{nextMonth|date_modify('first day of this month')|date('Y-m-d')}}">>></a></h5>
+    <table class="calendar">
+        <thead>
+            <tr>
+                {# Output the day of the week names using the 'abbr' abbreviation. #}
+                {% for item in calendar.head %}
+                    <th>
+                        <span class="abbr">{{ item.abbr }}</span>
+                    </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+             {# Setting an index so we know when to output a new row. #}
+            {% set idx = 1 %}
+            {# Looping through each day. #}
+            {% for item in days %}
+                {# Because this is the start of the row we output a opening container element. #}
+                {% if idx == 1 %}
+                    <tr>
+                {% endif %}
+                {# Outputting each day in this week if it is not empty. #}
+                {% if item.date is not empty %}
+                    {# If day is today give output extra content to let user know. #}
+                    <td {% if item.today %}class="today" {% endif %}>
+                            {% if item.date|date('m') != currentMonth %}
+                                <em>
+                            {% endif %}
+                                {# If today is first day of the month output the month name with day number otherwise output the day number. #}
+                                {% set date = item.date|date('Y-m-d') %}
+                                {% if craft.entries.section('events').startDate(date).order('startDate desc')|length %}
+                                    {% if item.today %}<strong>{% endif %}<a href="/events?date={{ date }}">{{item.day}}</a>{% if item.today %}</strong>{% endif %}
+                                {% else %}
+                                    {{item.day}}
+                                {% endif %}
+                            {% if item.date|date('m') != currentMonth %}
+                                </em>
+                            {% endif %}
+                        {# Day info goes here #}
+                    </td>
+                {% else %}
+                    {# Output day number on empty days. #}
+                    <td>
+                        <a class='title'><em>{{ item.day }}</em></a>
+                        {% if item.date is not empty %} {{ item.date|date('D M d Y') }} {% endif %}
+                    </td>
+                {% endif %}
+                {# Increment the index. #}
+                {% set idx = idx + 1 %}
+                {# If the index is greater than 7 set the week closing element and reset index to start a new week. #}
+                {% if idx > 7 %}
+                    </tr>
+                    {% set idx = 1 %}
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

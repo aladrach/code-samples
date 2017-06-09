@@ -1,0 +1,71 @@
+{% extends "_layouts/default" %}
+{% block content %}                  
+	<div class="row">
+		<div class="small-12 columns">
+			
+			<h1>{{entry.title}}</h1>
+			<div class="row">
+				<div class="small-12 medium-9 columns">
+
+					{% if entry.articlePhoto|length %}
+						<figure class="article-image">
+							<img src="{{entry.articlePhoto.first.url('articleThumb')}}" alt="{{entry.articlePhoto.first.title}}">
+							<figcaption>{{entry.articlePhotoCaption}}</figcaption>
+						</figure>
+					{% endif %}
+
+					{{entry.articleContent|raw}}
+
+					<div class="tags"><i class="fa fa-tags"></i> Categories: {% for tag in entry.location %}<a href="#" class="button outline">{{tag.title}}</a> {% endfor %}{% for tag in entry.topic %}<a href="#" class="button outline">{{tag.title}}</a> {% endfor %}</div>
+
+					<div class="other-posts row collapse">
+						{% set articles = craft.entries.section('articles').order('postDate desc') %}
+
+						{% if entry.getPrev(articles) %}
+							<div class="column align-self-stretch">
+								<div class="previous row">
+									<div class="column align-self-middle">
+										<a class="nav-tag" href="{{entry.getPrev(articles).url}}"><i class="fa fa-angle-left"></i> Previous</a>
+										<a href="{{entry.getPrev(articles).url}}" class="title">{{entry.getPrev(articles).title}}</a>
+									</div>
+								</div>
+							</div>
+						{% endif %}
+
+						{% if entry.getNext(articles) %}
+							<div class="column align-self-stretch">
+								<div class="next row">
+									<div class="column align-self-middle">
+										<a class="nav-tag" href="{{entry.getNext(articles).url}}">Next <i class="fa fa-angle-right"></i></a>
+										<a href="{{entry.getNext(articles).url}}" class="title">{{entry.getNext(articles).title}}</a>
+									</div>
+								</div>
+							</div>
+						{% endif %}
+					</div>
+						
+				</div>
+
+				<div class="small-12 medium-3 columns">
+					<aside>
+						<h4>Categories</h4>
+						<h5>By Location</h5>
+						<ul class="categories">
+							{% for tag in craft.tags.group('location') %}
+								<li><a href="">{{tag.title}}</a></li>
+							{% endfor %}
+						</ul>
+
+						<h5>By Topic</h5>
+						<ul class="categories">
+							{% for tag in craft.tags.group('topic') %}
+								<li><a href="">{{tag.title}}</a></li>
+							{% endfor %}
+						</ul>
+					</aside>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+{% endblock %}

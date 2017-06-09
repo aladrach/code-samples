@@ -1,0 +1,139 @@
+{% extends "_layouts/default" %}
+{% block content %}
+	<section class="business-listing">                
+		<div class="row">
+			<div class="small-12 columns">
+				
+				<h1>{{entry.title}}</h1>
+				{% if entry.businessPhoto|length %}
+					<div class="row medium-up-4 business-photos">
+						{% for photo in entry.businessPhoto %}
+							<div class="column">
+								<img src="{{photo.url('businessPhotos')}}" alt="{{photo.title}}">
+							</div>
+						{% endfor %}
+					</div>
+				{% endif %}
+				
+				<p><strong>{{entry.businessTagline}}</strong></p>
+				<div class="tags no-margin"><i class="fa fa-tags"></i> Tag: {% for tag in craft.tags.relatedTo(entry) %}<a href="/tags/{{tag.slug}}" class="button outline">{{tag.title}}</a> {% endfor %}</div>
+				<div class="row">
+					<div class="small-12 medium-9 columns">
+						{{entry.fullBusinessDescription}}
+					</div>
+
+					<div class="small-12 medium-3 columns">
+						<aside>
+							{% if entry.businessLogo|length %}<img src="{{entry.businessLogo.first.url('businessLogo')}}" alt="{{entry.title}}">{% endif %}
+							{% for product in craft.commerce.products.relatedTo(entry) %}
+								{% if loop.first %}
+									<h4>Current MimiDeals</h4>
+								{% endif %}
+								<div class="product">
+							        {% if product.url %}<a href="{{product.url}}">{% endif %}
+						        	{% if product.certificateProductImage|length %}
+						     				{% set image = product.certificateProductImage.first %}
+	                                        {% set image = craft.imager.transformImage(image, { width: 290, height: 290, mode: 'letterbox', letterbox: { color: '#fff', opacity: 0 } }) %}
+							        		<img src="{{image.url}}" alt="{{product.title}}">
+							        {% else %}
+							        	{% include "deals/_images/product" with { class: 'u-max-full-width' } %}
+							        {% endif %}
+							        {% if product.url %}</a>{% endif %}
+							        <div class="product-info">
+							        	<div class="product-title">{% if product.url %}{{ product.link }}{% else %}{{ product.title }}{% endif %}</div>
+								        {% if product.variants|length %}
+
+								            {%- set currentPurchasable = '' -%}
+								            {%- for purchasable in product.variants -%}
+								                {%- set currentCartCount = 0 -%}
+								                {%- for item in cart.lineItems -%}
+								                    {%- if item.purchasable.id == purchasable.id -%}
+								                        {%- set currentCartCount = currentCartCount + item.qty -%}
+								                    {%- endif -%}
+								                {%- endfor -%}
+
+								                {% if ( (purchasable.stock - currentCartCount) >= 1 or purchasable.unlimitedStock == true ) and currentPurchasable|length == 0 %}
+								                    {% set currentPurchasable = purchasable  %}
+								                {% endif %}
+								            {%- endfor -%}
+
+							                {% if product.unlimitedStock or (product.unlimitedStock == false and product.totalStock > 0 ) %}
+
+							                    {% set overridePrice = craft.userprices.getOverrideByVariantId(currentPurchasable.id) %}
+							                    {% if overridePrice %}
+							                        <div class="price">{{ overridePrice[0].price|currency(cart.currency) }}</div>
+							                    {% else %}
+							                        <div class="price">{{ currentPurchasable.salePrice|currency(cart.currency) }}</div>
+							                    {% endif %}
+							                {% else %}
+							                    {{ "Out of Stock"|t }}
+							                {% endif %}
+
+								        {% endif %}
+							        </div>
+							    </div>
+							    <hr>
+						    {% endfor %}
+							<h4>Contact Information</h4>
+							<h5>Locations</h5>
+							<p>{{entry.businessAddress.format}}</p>
+							
+							{% if entry.businessPhone %}
+								<h5>Phone:</h5>
+								<p>{{entry.businessPhone}}</p>
+							{% endif %}
+
+							{% if entry.businessEmail %}
+								<h5>Email:</h5>
+								<p>{{entry.businessEmail}}</p>
+							{% endif %}
+							
+							{% if entry.businessHours %}
+							<h5>Hours:</h5>
+							<p>{{entry.businessHours}}</p>
+							{% endif %}
+							{% set options = {
+							    height: 300,
+							    zoom: 10,
+							    draggable: false
+							} %}
+							<div class="business-map">
+								{{ craft.smartMap.map(entry.businessAddress, options) }}
+							</div>
+							
+							
+							{% for article in craft.entries.relatedTo(entry) %}
+								{% if loop.first %}
+									<h4>As Seen In Mimi</h4>
+									<h5>Articles:</h5>
+								{% endif %}
+								<a href="{{article.url}}">{{article.title}}</a>
+								{% if loop.last %}<br><br>{% endif %}
+							{% endfor %}
+
+							{% for deal in craft.commerce.products.relatedTo(entry) %}
+								{% if loop.first %}<h5>MimiDeals:</h5>{% endif %}
+								<a href="{{deal.url}}">{{deal.title}}</a>
+								{% if loop.last %}<br><br>{% endif %}
+							{% endfor %}
+
+							{% if entry.businessFacebookLink or entry.businessGooglePlusLink or entry.businessTwitterLink %}<h4>Connect With {{entry.title}}</h4>{% endif %}
+
+							{% if entry.businessFacebookLink %}
+								<p><a href="{{entry.businessFacebookLink}}" target="_blank"><img src="/images/facebook_btn.png" alt=""></a></p>
+							{% endif %}
+
+							{% if entry.businessGooglePlusLink %}
+								<p><a href="{{entry.businessGooglePlusLink}}" target="_blank"><img src="/images/googleplus_btn.png" alt=""></a></p>
+							{% endif %}
+
+							{% if entry.businessTwitterLink %}
+								<p><a href="{{entry.businessTwitterLink}}" target="_blank"><img src="/images/twitter_btn.png" alt=""></a></p>
+							{% endif %}
+						</aside>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>  
+{% endblock %}

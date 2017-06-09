@@ -1,0 +1,158 @@
+{% extends "_layouts/default" %}
+{% block content %}
+	<div class="row search-list">
+     	<div class="small-12 medium-9 columns">
+     		{% set search = craft.request.getparam('search') %}
+			<h1>Showing search results for: {{search}}</h1>
+			{% set results = 0 %}
+			{% for business in craft.entries.section('businesses').limit(5).search(search) %}
+				{% set results = 1 %}
+				{% if loop.first %}
+				<h2>Businesses</h2>
+				{% endif %}
+				<div class="row business">
+					<div class="small-12 columns">
+						<h4>{{business.title}}</h4>
+						<p>{{business.businessShortDescription|trimit(200)}}</p>
+						<a class="readmore" href="{{business.url}}">View Business <i class="fa fa-angle-right"></i></a>
+					</div>
+				</div>
+
+				{% if loop.last %}
+					{% if craft.entries.section('businesses').search(search)|length > 5 %}
+						<a href="/businesses/search/{{search}}">View all results</a>
+					{% endif %}
+					<hr>
+				{% endif %}
+			{% endfor %}
+
+
+			{% for article in craft.entries.section('articles').limit(5).search(search) %}
+				{% if loop.first %}
+				<h2>Articles</h2>
+				{% endif %}
+				<div class="row article">
+					<div class="small-12 columns">
+						<div class="post-info">{{article.postDate|date('j M Y')}} • {{article.author.name}}</div>
+						<h4>{{article.title}}</h4>
+						<p>{{article.articleContent|trimit(200)}}</p>
+						<a class="readmore" href="{{article.url}}">Read Article <i class="fa fa-angle-right"></i></a>
+					</div>
+				</div>
+				{% if loop.last %}
+					{% if craft.entries.section('articles').search(search)|length > 5 %}
+						<a href="/articles/search/{{search}}">View all results</a>
+					{% endif %}
+					<hr>
+				{% endif %}
+			{% endfor %}
+
+			{% for product in craft.commerce.products.limit(5).search(search) %}
+				{% set results = 1 %}
+				{% if loop.first %}
+				<h2>Deals</h2>
+				{% endif %}
+				<div class="row deal">
+				    <div class="small-12 columns">
+			        	<h4>{{ product.title }}</h4>
+			        	<p>{{product.certificateProductDescription|trimit(200)}}</p>
+				        {% if product.variants|length %}
+
+				            {%- set currentPurchasable = '' -%}
+				            {%- for purchasable in product.variants -%}
+				                {%- set currentCartCount = 0 -%}
+				                {%- for item in cart.lineItems -%}
+				                    {%- if item.purchasable.id == purchasable.id -%}
+				                        {%- set currentCartCount = currentCartCount + item.qty -%}
+				                    {%- endif -%}
+				                {%- endfor -%}
+
+				                {% if ( (purchasable.stock - currentCartCount) >= 1 or purchasable.unlimitedStock == true ) and currentPurchasable|length == 0 %}
+				                    {% set currentPurchasable = purchasable  %}
+				                {% endif %}
+				            {%- endfor -%}
+
+
+				                {% if product.unlimitedStock or (product.unlimitedStock == false and product.totalStock > 0 ) %}
+
+				                    {% set overridePrice = craft.userprices.getOverrideByVariantId(currentPurchasable.id) %}
+				                    {% if overridePrice %}
+				                        <div class="price">{{ overridePrice[0].price|currency(cart.currency) }}</div>
+				                    {% else %}
+				                        <div class="price">{{ currentPurchasable.salePrice|currency(cart.currency) }}</div>
+				                    {% endif %}
+				                    <a href="{{product.url}}" class="readmore">View Deal <i class="fa fa-angle-right"></i></a>
+				                {% else %}
+				                    {{ "Out of Stock"|t }}
+				                {% endif %}
+
+				        {% endif %}
+				    </div>
+				</div>
+				{% if loop.last %}
+					{% if craft.commerce.products.search(search)|length > 5 %}
+						<a href="/businesses/search/{{search}}">View all results</a>
+					{% endif %}
+					<hr>
+				{% endif %}
+			{% endfor %}
+
+
+
+			{% set eventOptions = {
+				search: search,
+				limit: 5
+			} %}
+			{% set allEvents = {
+				search: search
+			} %}
+
+			{% paginate craft.calendar.events(eventOptions) as pageInfo, events %}
+
+			{% for event in events %}
+				{% set results = 1 %}
+				{% if loop.first %}<h2>Events</h2>{% endif %}
+				<div class="event" style="border-left: 5px solid {{ event.calendar.color }}; padding-left: 15px;">
+					<span class="label pull-right" style="background-color: {{ event.calendar.color }}; color: {{ event.calendar.contrastColor }} !important;">
+						{{ event.calendar.name }}
+					</span>
+					<h3>
+						<a href="{{ siteUrl }}events/event/{{ event.id }}/{{ event.repeating ? event.startDate.format('Y/m/d') }}">{{ event.title }}</a>
+					</h3>
+					<p>
+						<strong>{{ event.startDate.format('l, F j, Y') }}</strong>
+						{% if event.allDay %}
+							(all day)
+						{% else %}
+							at {{ event.startDate.format("g:ia") }} -
+							{% if event.multiDay %}
+								<br />{{ event.endDate.format("l, F j, Y \\a\\t g:ia") }}
+							{% else %}
+								{{ event.endDate.format("g:ia") }}
+							{% endif %}
+						{% endif %}
+					<br>
+						<strong>Location:</strong>
+						{% if event.eventLocation is defined and event.eventLocation is not empty %}
+							{{ event.eventLocation|striptags }}
+						{% else %}
+							N/A
+						{% endif %}
+					</p>
+					<a href="{{ siteUrl }}events/event/{{ event.id }}/{{ event.repeating ? event.startDate.format('Y/m/d') }}">More Info <i class="fa fa-arrow-right"></i></a>
+				</div>
+				{% if loop.last %}
+					{% if craft.calendar.events(allEvents)|length > 5 %}
+						<a href="/events/search/{{search}}">View all results</a>
+					{% endif %}
+					
+				{% endif %}
+			{% endfor %}
+
+			{% if results == 0 %}Sorry, but we couldn't find any results for your search.{% endif %}
+    	</div>
+    	<div class="small-12 medium-3 columns">
+			{% include '_includes/tags-sidebar' %}
+		</div>
+    </div>          
+{% endblock %}

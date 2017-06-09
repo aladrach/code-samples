@@ -1,0 +1,162 @@
+{% set entry = craft.entries.section('homepage').first %}
+
+{% extends "_layouts/default" %}
+
+{% block content %}
+<div class="page-content home">
+	<section class="homepage-slider-container">
+		<div class="homepage-slider">
+			{% for slide in entry.mainSlider %}
+				<div class="slick-slide" id="slick-slide0{{loop.index0}}">
+					{% if slide.slideLink %}<a href="{{slide.slideLink}}">{% endif %}
+						<div class="slide-container" style="background-image: url('{{slide.slideImage.first.url}}');">
+							{% if slide.header %}
+								<div class="overlay">
+									<div class="overlay-container">
+										<h4>{{slide.header}} </h4>
+										{{slide.description|raw}}
+										<div class="readmore">{% if slide.slideLink %}Read More <i class="fa fa-long-arrow-right" aria-hidden="true"></i>{% endif %}</div>
+									</div>
+								</div>
+							{% endif %}
+						</div>
+					{% if slide.slideLink %}</a>{% endif %}
+				</div>
+			{% endfor %}
+		</div>
+	</section>
+	<section class="featured-images">
+		<div class="row expanded small-up-1 medium-up-4">
+			<div class="column align-self-middle">
+				{{ craft.adWizard.randomizeAdGroup('home1') }}
+			</div>
+			<div class="column align-self-middle">
+				{{ craft.adWizard.randomizeAdGroup('home2') }}
+			</div>
+			<div class="column align-self-middle">
+				{{ craft.adWizard.randomizeAdGroup('home3') }}
+			</div>
+			<div class="column align-self-middle">
+				{{ craft.adWizard.randomizeAdGroup('home4') }}
+			</div>
+		</div>
+	</section>
+	<section class="featured-items">
+		<div class="row">
+			<div class="small-12 medium-3 columns">
+				{% set columnist = entry.featuredColumnist.first %}
+				<h2 class="headline">Featured Columnist</h2>
+				<div class="featured-columnist">
+					<img src="{{columnist.photoUrl(260)}}" alt="{{columnist.name}}">
+					<h4>{{columnist.name}}</h4>
+					{{columnist.authorDescription}}
+				</div>
+			</div>
+			<div class="small-12 medium-9 columns">
+				<h2 class="headline">Recent Headlines</h2>
+				<div class="article-carousel">
+					{% for article in craft.entries.section('articles').limit(5) %}
+						<div class="slick-slide slide">
+							<a href="{{article.url}}" alt="{{article.title}}">
+								{% if article.articlePhoto|length%}
+									<div class="image-container">
+										<img src="{{article.articlePhoto.first.url('articleThumb')}}" alt="{{article.title}}">
+										<div class="date"><strong>{{article.postDate|date('j')}}</strong><br>{{article.postDate|date('M')}}</div>
+										<button class="button readmore">Read More <i class="fa fa-long-arrow-right" aria-hidden="true"></i></button>
+									</div>
+								{% else %}
+									{{article.postDate|date('F j, Y')}}
+								{% endif %}
+								<div class="author">{{article.author.name}}</div>
+								<h4>{{article.title}}</h4>
+								<p>{{article.articleContent|trimit(150)}}</p>
+							</a>
+							<div class="tags no-margin">{% for category in craft.categories.relatedTo(article) %}<a href="/articles/{{category.slug}}" class="button">{{category.title}}</a> {% endfor %}</div>
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="top-videos">
+		<div class="row">
+			<div class="medium-12 columns">
+				<h2 class="headline">Top Videos</h2>
+				{% set videos = craft.rest.request.handle('youtube').send() %}
+				{% if videos.errorMsg is defined %}
+					<div class="panel alert">{{videos.errorMsg}}</div>
+				{% else %}
+					<div class="top-videos-slider">
+						{% for item in videos.data.items %}
+							<div class="slick-slide slide">
+								<a href="#" data-open="topVideo-{{loop.index}}" onclick="event.preventDefault();">
+									<div class="video-overlay-container">
+										{% set image = 'http://img.youtube.com/vi/' ~ item.snippet.resourceId.videoId ~ '/maxresdefault.jpg' %}
+										{% set transformedImage = craft.imager.transformImage(image, { width: 400, height: 400 }) %}
+										<img src="{{transformedImage.url}}" alt="{{item.snippet.title}}"><br>
+										<div class="video-overlay">
+											<div class="video-overlay-text self-align-middle">
+												{{item.snippet.title}}
+												<div class="published-date">
+													{% set postDate = item.snippet.publishedAt|date_modify('+0 day') %}
+													{{postDate|timeAgoInWords}} ago
+												</div>
+											</div>
+											<div class="play-button">
+												<i class="fa fa-play-circle"></i>
+											</div>
+										</div>
+									</div>
+								</a>
+								<div class="small reveal video-modal" id="topVideo-{{loop.index}}" data-reveal data-close-on-click="true" data-animation-in="fade-in fast" data-animation-out="fade-out fast"  data-reset-on-close="true">
+									<div class="flex-video widescreen">
+										{% set videoUrl = 'https://www.youtube.com/watch?v=' ~ item.snippet.resourceId.videoId %}
+										{{videoUrl|videoEmbed}}
+										<button class="close-button" data-close aria-label="Close modal" type="button">
+										  <span aria-hidden="true">&times;</span>
+										</button>
+									</div>
+								</div>
+							</div>
+						{% endfor %}
+					</div>
+				{% endif %}
+			</div>
+		</div>
+	</section>
+</div>
+{% endblock %}
+
+{% includeJs %}
+	$('.homepage-slider').slick({
+	  dots: false,
+	  speed: 500,
+	  arrows: true,
+	  autoplay: true,
+  	  autoplaySpeed: 3000,
+  	  pauseOnHover: false
+	});
+	$('.top-videos-slider').slick({
+	  responsive: [
+	    {
+	      breakpoint: 1024,
+	      settings: "unslick"
+	    }
+	  ],
+	  infinite: true,
+	  slidesToShow: 3,
+	  slidesToScroll: 3
+	});
+	$('.article-carousel').slick({
+	  responsive: [
+	    {
+	      breakpoint: 1024,
+	      settings: "unslick"
+	    }
+	  ],
+	  infinite: true,
+	  slidesToShow: 2,
+	  slidesToScroll: 2
+	});
+{% endincludejs %}

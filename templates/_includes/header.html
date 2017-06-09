@@ -1,0 +1,101 @@
+<header>
+ 	<div class="row align-center">
+ 		<div class="small-12 medium-3 columns">
+ 			<ul class="social-icons hide-for-small-only">
+	 			{% for icon in socialIcons.socialIcons %}
+	 				<li><a href="{{icon.iconUrl}}" style="color: {{icon.color}};" target="_blank">{{icon.icon.icon}}</a></li>
+	 			{% endfor %}
+ 			</ul>
+ 			<div class="login">
+				{% if currentUser %}
+					<a href="/logout"><i class="fa fa-sign-out"></i> Logout</a> <a href="/account"><i class="fa fa-user"></i> My Account</a>
+	 			{% else %}
+	 				<a href="/login"><i class="fa fa-sign-in"></i> Login</a>
+	 			{% endif %}
+ 			</div>
+ 		</div>
+ 		<div class="small-12 medium-6 columns logo">
+ 			{% if craft.rebrand.isLogoUploaded %}
+				<a href="/"><img src="{{ craft.rebrand.logo.url }}" alt="{{siteName}}"></a>
+			{% endif %}
+ 		</div>
+ 		<div class="small-8 medium-2 medium-offset-1 columns cart-container">
+ 			<div class="cart-link align-self-middle hide-for-small-only">
+	 			<div class="row header-cart collapse">
+	 				<div class="small-3 columns">
+	 					<div class="basket">
+	 						<i class="fa fa-shopping-basket"></i>
+	 					</div>
+	 				</div>
+	 				<div class="small-9 columns">
+	 					<div class="mycart">
+	 						My Cart
+	 					</div>
+	 					{{ cart.lineItems|length }} item{{cart.lineItems|length != 1 ? 's'}} - {{ cart.totalPrice|currency(cart.currency) }}
+
+	 				</div>
+	 			</div>
+ 			</div>
+ 			
+ 			<div class="cart-items" id="headerCart" style="display: none;" tabindex="0">
+ 				<strong>Your cart:</strong><br>
+ 				{% if cart.lineItems|length %}
+	 				{% for item in cart.lineItems %}
+						<div class="item-title">{{ item.qty }} x {{ item.purchasable.product.title }}</div>
+						<em>{{ item.total|currency(cart.currency) }}</em>
+	 				{% endfor %}
+	 				<strong>Total:</strong> {{ cart.totalPrice|currency(cart.currency) }}
+	 				<hr>
+	 				<div class="small button-group">
+	 					<a href="/cart" class="button">View Cart</a>
+	 					<a href="/deals/checkout" class="button">Checkout</a>
+	 				</div>
+	 			{% else %}
+	 				You have no items in your cart
+	 			{% endif %}
+ 			</div>
+ 		</div>
+ 	</div>
+</header>
+<nav>
+ 	<div class="row">
+ 		<div class="medium-12 columns">
+		
+ 			{{ craft.amNav.getNav("mainMenu", {
+			    class: 'main-navigation'
+			}) }}
+			<div class="search-container hide-for-small-only">
+				<form action="/search">
+					<div class="search">
+						<i class="fa fa-search"></i>
+					</div>
+					<button type="submit" class="go" style="display: none;">
+						<i class="fa fa-share" aria-hidden="true"></i>
+					</button>
+					<div class="search-box" style="display: none;">
+						<input type="text" name="search" id="search" placeholder="Search..." {% if craft.request.getparam('search') is defined %}value="{{craft.request.getparam('search')}}" {% endif %}>
+					</div>
+				</form>
+			</div>
+ 		</div>
+ 	</div>
+</nav>
+{% includeJs %}
+$('.search').click(function(event) {
+	$('.search-box').animate({width:'toggle'},200);
+	$('.go').fadeIn();
+	$( "#search" ).focus();
+});
+$( "#search" ).focusout(function() {
+	$('.go').fadeOut();
+	$('.search-box').animate({width:'toggle'},200);
+});
+$('.cart-link').click(function(event) {
+	event.preventDefault();
+	$('#headerCart').fadeIn();
+	$( "#headerCart" ).focus();
+});
+$( "#headerCart" ).focusout(function() {
+	$('#headerCart').fadeOut();
+});
+{% endincludejs %}

@@ -1,0 +1,128 @@
+{% if order is not defined %}
+    {% set number = craft.request.param('number') %}
+    {% set order = craft.commerce.orders.number(number).first() %}
+{% endif %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">
+    <style>
+    {% include 'deals/style.css' %}
+    .paidLogo{
+        font-weight:bold;
+        position: absolute;
+        left:30%;
+        font-family: 'Helvetica', serif;
+        color:rgb(211, 65, 50);
+        font-size:48px;
+        -ms-transform: rotate(-20deg); /* IE 9 */
+        -webkit-transform: rotate(-20deg); /* Safari */
+        transform: rotate(-20deg);
+    }
+    table.heading td{
+        vertical-align: top;
+    }
+    </style>
+</head>
+
+<body>
+
+    <div class="row">
+        <div class="twelve columns">
+
+            <h1>Order #{{ order.id }}</h1>
+
+
+            <div class="row">
+                <div class="four columns">
+                    <h4>Details</h4>
+
+                    <ul>
+                        <li><strong>{{ "Customer"|t }}:</strong> {{ order.customer.email }}</li>
+                        <li><strong>{{ "Total"|t }}:</strong> {{ order.totalPrice|currency(order.currency) }}</li>
+                        <li><strong>{{ "Date"|t }}:</strong> {{ order.dateOrdered }}</li>
+                    </ul>
+
+                </div>
+                <div class="four columns">
+                    <h4>Shipping Address</h4>
+
+                    {% if order.shippingAddress %}
+                    {% include 'deals/_includes/addresses/address' with { address: order.shippingAddress } %}
+                    {% endif %}
+                </div>
+                <div class="four columns">
+                    <h4>Billing Address</h4>
+                    {% if order.billingAddress %}
+                    {% include 'deals/_includes/addresses/address' with { address: order.billingAddress } %}
+                    {% endif %}
+                </div>
+            </div>
+
+
+            {% if order.pdfUrl %}
+            <h4>Receipt (<a href="{{ order.getPdfUrl('receipt') }}">Download</a>)</h4>
+            {% endif %}
+
+            <table class="u-full-width">
+                <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Unit Price</th>
+                    <th>Quantity</th>
+                    <th class="text-right">Total</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in order.lineItems %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.description }}</strong><br>
+                            {% if item.purchasable.product.type.handle == 'certificate' %}
+                                <ul>
+                                {% for i in 1..item.qty %}
+                                    <li><a href="https://{{craft.request.serverName}}/{{'certificates/download?number=' ~ order.number ~ '&item=' ~ item.id ~ '-' ~ i }}">{{ item.sku }}-{{item.id}}-{{ i }}</a></li>
+                                {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.onSale %}
+                                <strike>{{ item.price|currency(order.currency) }}</strike>   {{ item.salePrice|currency(order.currency) }}
+                            {% else %}
+                                {{ item.price|currency(order.currency) }}
+                            {% endif %}
+                        </td>
+                        <td>{{ item.qty }}</td>
+                        <td class="text-right">{{ item.total|currency(order.currency) }}</td>
+                    </tr>
+                {% endfor %}
+
+                {% for adjustment in order.adjustments %}
+                    <tr>
+                        <td>{{ adjustment.type }}</td>
+                        <td colspan="2"><strong>{{ adjustment.name }}</strong><br>({{ adjustment.description }})</td>
+                        <td class="text-right">{{ adjustment.amount|currency(order.currency) }}</td>
+                    </tr>
+                {% endfor %}
+
+                <tr>
+                    <td colspan="4" class="text-right">
+                        Item Total: {{ order.itemTotal|currency(order.currency) }}<br>
+                        Base Discount: {{ order.baseDiscount|currency(order.currency) }}<br>
+                        Base Shipping Cost: {{ order.baseShippingCost|currency(order.currency) }}<br>
+                        <h4>Total: {{ order.totalPrice|currency(order.currency) }}</h4>
+                    </td>
+                </tr>
+
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,87 @@
+{% extends '_layouts/default' %}
+{% block content %}
+    <div class="row">
+        <div class="medium-12 columns">
+            <h1>Mimideals</h1>
+        </div>
+    </div>
+    {%- set currentPurchasable = '' -%}
+    {%- for purchasable in product.variants -%}
+        {%- set currentCartCount = 0 -%}
+        {%- for item in cart.lineItems -%}
+            {%- if item.purchasable.id == purchasable.id -%}
+                {%- set currentCartCount = currentCartCount + item.qty -%}
+            {%- endif -%}
+        {%- endfor -%}
+
+        {% if ( (purchasable.stock - currentCartCount) >= 1 or purchasable.unlimitedStock == true ) and currentPurchasable|length == 0 %}
+            {% set currentPurchasable = purchasable  %}
+        {% endif %}
+    {%- endfor -%}
+
+    <div class="row product-details">
+        <div class="small-12 medium-3 columns">
+            {% include 'deals/_sidebar' %}
+        </div>
+        <div class="small-12 medium-9 columns">
+             <h2>{{ product.title }}</h2>
+            <div class="row">
+                <div class="small-12 columns">
+                    <div class="product-image">
+                        {% if product.certificateProductImage|length %}
+                            <img src="{{product.certificateProductImage.first.url('dealThumb')}}" alt="{{product.title}}">
+                        {% else %}
+                            {% include "deals/_images/product" with { class: 'u-max-full-width' } %}
+                        {% endif %}
+                    </div>                   
+
+                    <form method="POST">
+                        <input type="hidden" name="action" value="commerce/cart/updateCart">
+                        <input type="hidden" name="redirect" value="cart">
+                        
+                        <input type="hidden" name="purchasableId" value="{{ currentPurchasable.purchasableId }}">
+                        {{ getCsrfInput() }}
+
+                        <div class="price">{{ currentPurchasable.salePrice|currency(cart.currency) }}</div>
+                        
+                        {% if product.certificateBusiness|length %}<h4><a href="{{product.certificateBusiness.first.url}}">{{product.certificateBusiness.first.title}}</a></h4>{% endif %}
+                        {{product.certificateProductDescription|raw}}
+                        {% if currentUser %}
+                            {% set order = craft.commerce.orders.user(currentUser).hasPurchasables(product.defaultVariant).find() %}
+                            {% if order|length %}
+                                <p><strong>You have already purchased this certificate: </strong><br>
+                                <a href="account/order?orderNumber={{ order[0].number }}">Order #{{ order[0].shortNumber }}</a></p>
+                            {% endif %}
+                        {% endif %}
+                        <hr>
+                        <label for="isGift"><input id="isGift" type="checkbox"> Add a gift note</label>
+                        <textarea type="text" id="giftnote" style="display: none;" name="options[giftNote]" placeholder="Gift Note (Optional)" rows="4"></textarea>
+                        <div class="add-to-cart">
+                            <input type="number" name="qty" value="1" min="1" step="1"> <button type="submit" class="button large"><i class="fa fa-shopping-basket"></i> Add to Cart</button>
+                        </div>
+                    </form>
+                    <strong>Share this product:</strong>
+                    <div class="addthis_sharing_toolbox"></div>
+                    <p><a href="{{ url('deals/products') }}">&larr; Back to all products.</a></p>
+                </div>
+            </div>
+            
+            
+        </div>
+    </div>
+{% endblock %}
+
+{% includeJs %}
+$('#isGift').change(function(){
+    if (this.checked) {
+        $('#giftnote').fadeIn();
+    }
+    else {
+        $('#giftnote').fadeOut();
+    }
+}) 
+{% endincludejs %}
+
+{% block footerScripts %}
+    <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-520a66c670026bc9"></script>
+{% endblock %}

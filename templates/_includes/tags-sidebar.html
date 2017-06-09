@@ -1,0 +1,30 @@
+<aside>
+	<h4>Categories</h4>
+	<h5>By Location</h5>
+	<ul class="categories">
+		{% for category in craft.categories.group('location') %}
+			<li><a href="/categories/{{category.slug}}">{{category.title}}</a></li>
+		{% endfor %}
+	</ul>
+
+	<h5>By Topic</h5>
+	<ul class="categories">
+		{% for category in craft.categories.group('topic') %}
+			<li><a href="/categories/{{category.slug}}">{{category.title}}</a></li>
+		{% endfor %}
+	</ul>
+
+	<h5>By Issue Date</h5>
+	<ul class="categories">
+		{% for category in craft.categories.group('issueDate') %}
+			<li><a href="/categories/{{category.slug}}">{{category.title}}</a></li>
+		{% endfor %}
+	</ul>
+
+	<h5>By Business</h5>
+	<ul class="categories">
+		{% for business in craft.entries.section('businesses') %}
+			<li><a href="/categories/business/{{business.slug}}">{{business.title}}</a></li>
+		{% endfor %}
+	</ul>
+</aside>

@@ -1,0 +1,19 @@
+<aside class="deal-sidebar">
+	<h4>Browse by Category</h4>
+	{% if category is defined %}
+		{% set currentCategory = category.id %}
+	{% else %}
+		{% set currentCategory = '' %}
+	{% endif %}
+	<ul class="categories">
+		{% nav category in craft.categories.group('dealCategories') %}
+			<li><a class="{% if currentCategory == category.id %}current{% endif %}" href="{{category.url}}">{% if category.level == 2 %}<i class="fa fa-caret-right" aria-hidden="true"></i> {% endif %}{{category.title}}</a>
+			{% ifchildren %}
+                <ul>
+                    {% children %}
+                </ul>
+            {% endifchildren %}
+			</li>
+		{% endnav %}
+	</ul>
+</aside>

@@ -1,0 +1,5 @@
+{% if entry.type != 'pages' %}
+		{% set layoutPath %}_layouts/{{entry.type}}{% endset %} {% include ''~layoutPath~'' %}
+{% else %}
+	{% include '_layouts/page-layout' %}
+{% endif %}

@@ -1,0 +1,70 @@
+{% extends "_layouts/default" %}
+{% block content %}                  
+	<div class="row">
+		<div class="small-12 columns">
+			{% if tag is defined %}{% set relatedTag = craft.tags.slug(tag) %}{% else %}{% set relatedTag = "" %}{% endif %}
+			{% if tag is defined %}<a href="/businesses" class="view-all">View All Businesses</a>{% endif %}
+			<h1>Featured Businesses {% if tag is defined %}<span>Showing businesses related to: <strong>{{relatedTag.first.title}}</strong></span>{% endif %}</h1>
+			<div class="row">
+				<div class="small-12 medium-9 columns">
+					{% paginate craft.entries.section('businesses').limit(5) as pageInfo, pageEntries %}
+					{% for business in pageEntries %}
+						<div class="row business">
+							<div class="small-12 medium-6 columns">
+							<a href="{{business.url}}">
+									{% if business.businessPhoto|length %}
+										<div class="image-container">
+											<img src="{{business.businessPhoto.first.url('businessThumb')}}" alt="{{business.title}}">
+											<button class="button readmore">Read More <i class="fa fa-long-arrow-right" aria-hidden="true"></i></button>
+										</div>
+									{% endif %}
+								</a>
+							</div>
+							<div class="small-12 medium-6 columns">
+								<h4>{{business.title}}</h4>
+								<p>{{business.businessAddress}}<br>
+								{{business.businessPhone}}<br>
+								<a href="{{business.businessUrl}}" target="_blank">{{business.businessUrl}}</a></p>
+
+								<p>{{business.businessShortDescription}}</p>
+								<div class="tags no-margin"><i class="fa fa-tags"></i> Categories: {% for category in craft.categories.relatedTo(business) %}<a href="/categories/{{category.slug}}" class="button outline">{{category.title}}</a> {% endfor %}</div>
+								<a class="readmore" href="{{business.url}}">Read More <i class="fa fa-angle-right"></i></a>
+							</div>
+						</div>
+						
+					{% endfor %}
+					
+
+					<ul class="pagination" role="navigation" aria-label="Pagination">
+					  {% if not pageInfo.prevUrl %}
+					  	<li class="pagination-previous disabled">Previous <span class="show-for-sr">page</span></li>
+					  {% else %}
+						<li class="pagination-previous"><a href="{{ pageInfo.prevUrl }}">Previous <span class="show-for-sr">page</span></a></li>
+					  {% endif %}
+
+					  {% for page, url in pageInfo.getPrevUrls(5) %}
+							<li><a href="{{url}}" aria-label="Page {{page}}">{{page}}</a></li>
+					  {% endfor %}
+
+					  <li><a class="current" href="">{{pageInfo.currentPage}}</a></li>
+
+					  {% for page, url in pageInfo.getNextUrls(5) %}
+					    	<li><a href="{{url}}" aria-label="Page {{page}}">{{page}}</a></li>
+					  {% endfor %}
+
+					  {% if not pageInfo.nextUrl %}
+					  	<li class="pagination-next disabled">Next <span class="show-for-sr">page</span></li>
+					  {% else %}
+						<li class="pagination-next"><a href="{{pageInfo.nextUrl}}" aria-label="Next page">Next <span class="show-for-sr">page</span></a></li>
+					  {% endif %}
+					</ul>
+				</div>
+
+				<div class="small-12 medium-3 columns">
+					{% include '_includes/tags-sidebar' %}
+				</div>
+			</div>
+		</div>
+	</div>
+	
+{% endblock %}

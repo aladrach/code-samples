@@ -1,0 +1,12 @@
+{% set itemRequest = craft.request.param('item')|split('-') %}
+
+{% set vars = {
+    number: craft.request.param('number'),
+    requestedItem: itemRequest[0],
+    requestedCount: itemRequest[1]
+} %}
+
+{% set settings = { orientation : 'portrait' } %}
+
+{% set pdf = craft.printmaker.pdfFromTemplate('certificates/_pdf_template', vars, settings) %}
+{{ pdf.output }}

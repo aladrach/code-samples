@@ -1,0 +1,16 @@
+<button type="button" class="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	<strong>{{ month.date.format('F Y') }}</strong> <i class="fa fa-caret-down" aria-hidden="true"></i>
+</button>
+<ul class="dropdown-pane" id="dropdown" data-dropdown data-auto-focus="true">
+	{% for date in month.dateRange(-6, 6) %}
+		{% if date == month.date %}<li role="separator" class="divider"></li>{% endif %}
+
+		<li class="{% if date == month.date %}current-month{% endif %}">
+			<a href="{{ siteUrl }}events/month/{{ date.format('Y/m') }}/">
+				{{ date.format('F Y') }}
+			</a>
+		</li>
+
+		{% if date == month.date %}<li role="separator" class="divider"></li>{% endif %}
+	{% endfor %}
+</ul>

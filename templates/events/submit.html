@@ -1,0 +1,256 @@
+{% extends "events/layouts/_layout.html" %}
+
+{% set pageTitle = "Event" %}
+{% set page = "edit" %}
+
+{% block content %}
+
+    {% set dateFormat = craft.i18n.localeData.dateFormatter.datepickerPhpFormat %}
+    {% set timeFormat = craft.i18n.localeData.dateFormatter.timepickerPhpFormat %}
+
+    {% set dateFormat = dateFormat|replace('n', 'm')|replace('j', 'd') %}
+    {% set timeFormat = timeFormat|replace('g', 'h')|replace('i', 'mm')|replace('A', 'tt') %}
+
+    {# Acquire URL segments #}
+    {% set baseUrlSegments = 1 %}
+    {% set segment1 = craft.request.segment(baseUrlSegments + 1) %}
+    {% set segment2 = craft.request.segment(baseUrlSegments + 2) %}
+    {% set segment3 = 'new' %}
+    {% set segment4 = craft.request.segment(baseUrlSegments + 4) %}
+    {% set segment5 = craft.request.segment(baseUrlSegments + 5) %}
+    {% set segment6 = craft.request.segment(baseUrlSegments + 6) %}
+
+    
+    </div>
+
+    <div class="row">
+        <div class="medium-12 columns">
+            <div id="events_calendar">
+                <div class="page-header">
+                <h1>Event Edit</h1>
+                <p class="lead">
+                    Below is an individual event edit form, which allows you to edit core event details.
+                </p>
+                {% set eventId = 'new' %}
+
+                {% set event = craft.calendar.event(segment3, {
+                loadOccurrences: false
+                }) %}
+
+                {% if event %}
+
+                    {% if event.id %}
+                        {% requirePermission "calendar-manageEventsFor:" ~ event.calendar.id %}
+                    {% else %}
+                        {% requirePermission "calendar-manageEvents" %}
+                    {% endif %}
+
+                    <form class="form-horizontal" method="post">
+                        <input type="hidden" name="action" value="calendar/events/saveEvent" />
+                        <input type="hidden" name="redirect" value="{{ siteUrl }}events/event/{id}" />
+                        <input type="hidden" name="{{ craft.config.csrfTokenName }}" value="{{ craft.request.csrfToken }}" />
+                        <input type="hidden" name="eventId" value="{{ event.id }}" />
+                        <input type="hidden" name="slug" value="{{ event.slug }}" />
+                        <input type="hidden" value="{{ craft.calendar.allowedCalendars[1].id }}" name="calendarEvent[calendarId]">
+                        <label for="title"> Event Title
+                            <input type="text" id="title" name="title" placeholder="Event Title">
+                        </label>
+                        <div class="row">
+                            <div class="small-12 medium-6 columns">
+                                <label for="startDate">Event Start Date
+                                    <input type="text" id="startDate" name="startDate" placeholder="MM/YY/YYYY">
+                                </label>
+    
+                                <label for="endDate">Event End Date
+                                    <input type="text" id="endDate" name="endDate" placeholder="MM/YY/YYYY">
+                                </label>
+                            </div>
+                            <div class="small-12 medium-6 columns">
+                                <div id="allday-startTime" class="hidden fast" data-toggler=".hidden" data-animate="fade-in fade-out">
+                                    <label for="startDate">Event Start Time
+                                        <input type="text" id="startTime" name="startTime" placeholder="HH:MM AM/PM">
+                                    </label>
+        
+                                    <label for="endDate">Event End Time
+                                        <input type="text" id="endTime" name="endTime" placeholder="HH:MM AM/PM">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <label>All day?</label>
+                        <div class="switch">
+                          <input class="switch-input" id="allDay" type="checkbox" name="allDay" checked="true" data-toggle="allday-startTime">
+                          <label class="switch-paddle" for="allDay">
+                            <span class="show-for-sr">All Day</span>
+                          </label>
+                        </div>
+
+                        <label>Repeats?</label>
+                        <div class="switch">
+                          <input class="switch-input" id="repeats" type="checkbox" name="repeats" data-toggle="repeatFrequency">
+                          <label class="switch-paddle" for="repeats">
+                            <span class="show-for-sr">Repeats</span>
+                          </label>
+                        </div>
+
+                        <div id="repeatFrequency" class="hidden fast" data-toggler=".hidden" data-animate="fade-in fade-out">
+                            <div class="row">
+                                <div class="small-12 medium-6 columns">
+                                    <label for="freqencyRecurrence">Recurrence</label>
+                                    <select name="calendarEvent[frequency]" id="freqencyRecurrence" class="form-control">
+                                        <option value="DAILY">
+                                            Daily
+                                        </option>
+                                        <option value="WEEKLY">
+                                            Weekly
+                                        </option>
+                                        <option value="MONTHLY">
+                                            Monthly
+                                        </option>
+                                        <option value="YEARLY">
+                                            Yearly
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="small-12 medium-6 columns">
+                                    <div id="dailyOptions" class="repeat-options">
+                                        This event will repeat every day.
+                                    </div>
+
+                                    <div id="weeklyOptions" class="repeat-options" style="display: none;">
+                                        <label>On:</label>
+                                        {% for day, dayName in craft.calendar.weekDaysShort %}
+                                            <input type="checkbox"
+                                                   id="repeats-by-month-week-day-{{ day }}"
+                                                   value="{{ day }}"
+                                                    {{ day in event.byDay ? "checked" }}
+                                                   name="calendarEvent[weekly][repeatsByWeekDay][]" />
+                                            <label for="repeats-by-weekday-{{ day }}">{{ dayName }}</label>
+                                        {% endfor %}
+                                    </div>
+
+                                     <div id="monthlyOptions" class="repeat-options" style="display: none;">
+                                        <div class="row">
+                                            <div class="small-2 columns small-offset-2" style="padding-top: 6px;">
+                                                <label>
+                                                    <input type="radio"
+                                                           name="calendarEvent[monthly][repeatsBy]"
+                                                           data-toggle-switch
+                                                           data-toggle-target="monthly"
+                                                           class="monthlyRepeatsBy"
+                                                           value="byMonthDay" checked>
+                                                    {{ "Each"|t }}
+                                                </label>
+                                            </div>
+                                            <div class="small-2 columns" style="padding-top: 6px; text-align: right;">
+                                                <label>
+                                                    <input type="radio"
+                                                           name="calendarEvent[monthly][repeatsBy]"
+                                                           data-toggle-switch
+                                                           data-toggle-target="monthly"
+                                                           class="monthlyRepeatsBy"
+                                                           value="byDay">
+                                                    {{ "On the"|t }}
+                                                </label>
+                                            </div>
+                                            <div class="small-2 columns">
+                                                <select name="calendarEvent[monthly][repeatsByDayInterval]" class="form-control">
+                                                    {% for interval, intervalTitle in craft.calendar.repeatsByOptions %}
+                                                        <option value="{{ interval }}" {{ interval == event.repeatsOnRule ? "selected" }}>
+                                                            {{ intervalTitle|t }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div id="monthDays" class="month-options"> 
+                                            <div class="row small-up-7">
+                                                {% for day, dayName in craft.calendar.monthDays %}
+                                                    <div class="column">
+                                                        <input type="checkbox"
+                                                               id="repeats-by-month-day-{{ day }}"
+                                                               value="{{ day }}"
+                                                                {{ day in event.byMonthDay ? "checked" }}
+                                                               name="calendarEvent[monthly][repeatsByMonthDay][]" />
+                                                        <label for="repeats-by-month-day-{{ day }}" style="margin-right: 0;">{{ dayName }}</label>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <div id="onTheMonth" class="month-options" style="display: none;">
+                                            {% for day, dayName in craft.calendar.weekDaysShort %}
+                                                <input type="checkbox"
+                                                       id="repeats-by-month-week-day-{{ day }}"
+                                                       value="{{ day }}"
+                                                        {{ day in event.byDay ? "checked" }}
+                                                       name="calendarEvent[monthly][repeatsByWeekDay][]" />
+                                                <label for="repeats-by-month-week-day-{{ day }}">{{ dayName }}</label>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                     <div id="yearlyOptions" class="repeat-options" style="display: none;">
+                                        <select name="calendarEvent[yearly][repeatsByDayInterval]" class="form-control">
+                                            {% for interval, intervalTitle in craft.calendar.repeatsByOptions %}
+                                                <option value="{{ interval }}" {{ interval == event.repeatsOnRule ? "selected" }}>
+                                                    {{ intervalTitle|t }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        
+                            
+                        </div>
+
+                        <input type="submit" class="button" value="Submit">
+                    </form>
+
+                {% else %}
+                    <div class="alert alert-danger" role="alert">
+                        <p class="lead">
+                            Sorry, no event was found.
+                        </p>
+                    </div>
+                {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+{% endblock %}
+
+{% includejs %}
+$( "#freqencyRecurrence" ).change(function() {
+    var freqVal = $( "select#freqencyRecurrence" ).val();
+    $('.repeat-options').fadeOut();
+    switch (freqVal) {
+        case 'DAILY':
+            $('#dailyOptions').fadeIn();
+            break;
+        case 'WEEKLY':
+            $('#weeklyOptions').fadeIn();
+            break;
+        case 'MONTHLY':
+            $('#monthlyOptions').fadeIn();
+            break;
+        case 'YEARLY':
+            $('#yearlyOptions').fadeIn();
+            break;
+    }
+});
+$(" .monthlyRepeatsBy").change(function() {
+    var monthVal = $( ".monthlyRepeatsBy:checked" ).val();
+    $('.month-options').fadeOut();
+    if (monthVal === 'byMonthDay') {
+        $('#monthDays').fadeIn();
+    }
+    else {
+        $('#onTheMonth').fadeIn();
+    }
+});
+{% endincludejs %}

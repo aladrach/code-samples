@@ -1,0 +1,74 @@
+{% extends '_layouts/default' %}
+{% requireLogin %}
+{% block content %}
+    <div class="row">
+        <div class="medium-12 columns">
+            {% if currentUser %}
+                <h1>My Orders</h1>
+                {% if craft.commerce.orders.customer(craft.commerce.customer).find()|length %}
+                    <table class="u-full-width">
+                        <thead>
+                        <tr>
+                            <th>{{ "Order"|t }}</th>
+                            <th>{{ "Date"|t }}</th>
+                            <th>{{ "Total Quantity"|t }}</th>
+                            <th>{{ "Total"|t }}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for order in craft.commerce.orders.customer(craft.commerce.customer).find() %}
+                            <tr>
+                                <td><a href="{{ url('account/order', { number: order.number }) }}">Order #{{ order.id }}</a></td>
+                                <td>{{ order.dateOrdered }}</td>
+                                <td>{{ order.totalQty }} items</td>
+                                <td>{{ order.totalPrice|currency(order.currency) }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    You currently have no orders.
+                {% endif %}
+            {% endif %}
+            {% if currentUser.isInGroup('business') %}
+                <hr>
+                <h1>Sold Gift Certificates for {{currentUser.business.first.title}}</h1>
+
+                {% set allOrders = craft.commerce.orders %}
+
+                <table class="data fullwidth">
+                    <thead>
+                        <tr>
+                            <th>{{ "Order"|t }}</th>
+                            <th>{{ "Date"|t }}</th>
+                            <th>{{ "Product"|t }}</th>
+                            <th>{{ "Voucher"|t }}</th>
+                            <th>{{ "Price"|t }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in allOrders %}
+                            {% for item in order.lineItems %}
+                                {% if item.purchasable.product.type.handle == 'certificate' %}
+                                    {% if currentUser.business.first.slug == item.purchasable.product.certificateBusiness.first().slug %}
+                                        {% for i in 1..item.qty %}
+                                            <tr>
+                                                {% if i == 1 %}
+                                                    <td style="vertical-align: top;" rowspan="{{ item.qty }}"><a href="{{ url('account/order?number=' ~ order.number) }}">Order {{ order.id }} / {{ order.number|slice(0,7) }}</a></td>
+                                                    <td style="vertical-align: top;" rowspan="{{ item.qty }}">{{ order.dateOrdered }}</td>
+                                                {% endif %}
+                                                <td style="padding-left: 14px;">{{ item.purchasable.product.title }}</td>
+                                                <td><a href="{{ url('/certificates/download?number=' ~ order.number ~ '&item=' ~ item.id ~ '-' ~ i) }}">{{ item.sku }}-{{item.id}}-{{ i }}</a></td>
+                                                <td>${{ item.salePrice|number_format(2, '.', ',') }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

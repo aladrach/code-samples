@@ -1,0 +1,44 @@
+{% extends "_layouts/default" %}
+{% block content %}                  
+	<div class="row">
+		<div class="small-12 columns">
+			<h1>Online Edition</h1>
+			<div id="map" style="width: 100%; height: 500px;"></div>
+   			<div id="content-window"></div>
+		    
+		</div>
+	</div>
+{% endblock %}
+
+{% block footerScripts %}
+	
+    <script>
+
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 12,
+          center: {lat: 37.06, lng: -95.68}
+        });
+
+        var kmlLayer = new google.maps.KmlLayer({
+          url: 'https://www.google.com/maps/d/u/0/kml?forcekms=1&mid=1ZbVC8j3wfNDhHxJhr1ijt80fZbU&amp;lid=z0S6KEisLM2A.kbZiqb4qrn-A',
+          suppressInfoWindows: false,
+          map: map
+        });
+        /*
+         kmlLayer.addListener('click', function(kmlEvent) {
+          var text = kmlEvent.featureData.description;
+          showInContentWindow(text);
+        });
+
+        function showInContentWindow(text) {
+          var sidediv = document.getElementById('content-window');
+          sidediv.innerHTML = text;
+        } */
+      }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCynd0j4gPXJZTz3yIsuYwTAPhqqlcQ6bM&callback=initMap">
+    </script>
+
+{% endblock %}
